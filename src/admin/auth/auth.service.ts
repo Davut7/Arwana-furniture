@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,8 +12,7 @@ import { TokenService } from '../token/token.service';
 import { CreateUserDto } from '../user/dto/createUser.dto';
 import { TokenDto } from '../token/dto/token.dto';
 import { LoginDto } from './dto/userLogin.dto';
-import { hash, verify } from 'argon2';
-
+import { hash, compare } from 'bcrypt';
 @Injectable()
 export class AuthService {
   constructor(
@@ -29,7 +29,7 @@ export class AuthService {
     if (existingUser)
       throw new ConflictException(`User with name ${dto.name} already exists!`);
 
-    const hashedPassword = await hash(dto.password);
+    const hashedPassword = await hash(dto.password, 10);
     dto.password = hashedPassword;
     const user = this.userRepository.create(dto);
 
@@ -51,14 +51,15 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: { name: dto.name },
     });
-    if (!user)
-      throw new NotFoundException(`User with ${dto.name} not found!`);
+    if (!user) throw new NotFoundException(`User with ${dto.name} not found!`);
 
-    const isPasswordValid = await verify(user.password, dto.password);
+    const isPasswordValid = await compare(dto.password, user.password);
     if (!isPasswordValid)
-      throw new NotFoundException(`User password incorrect!`);
+      throw new BadRequestException(`User password incorrect!`);
 
-    const tokens = this.tokenService.generateTokens(new TokenDto(user));
+    const tokenDto = new TokenDto(user);
+
+    const tokens = this.tokenService.generateTokens({ ...tokenDto });
 
     await this.tokenService.saveTokens(user.id, tokens.refreshToken);
 

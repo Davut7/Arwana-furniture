@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserUpdateDto } from './dto/updateUser.dto';
-import { hash } from 'argon2';
 import { TokenDto } from '../token/dto/token.dto';
-
+import { hash } from 'bcrypt';
 @Injectable()
 export class UserService {
   constructor(
@@ -42,7 +41,7 @@ export class UserService {
   async updateUserById(userId: string, userUpdateDto: UserUpdateDto) {
     const user = await this.findUserById(userId);
     if (userUpdateDto.password) {
-      const hashedPassword = await hash(userUpdateDto.password);
+      const hashedPassword = await hash(userUpdateDto.password, 10);
       userUpdateDto.password = hashedPassword;
     }
     Object.assign(user, userUpdateDto);

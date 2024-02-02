@@ -10,12 +10,16 @@ import { CategoryBrandEntity } from 'src/brand-category/entities/brandCategory.e
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CategoryEntity, MediaEntity, CategoryBrandEntity]),
+    TypeOrmModule.forFeature([
+      CategoryEntity,
+      MediaEntity,
+      CategoryBrandEntity,
+    ]),
     SharedModule,
     forwardRef(() => BrandsModule),
   ],
   controllers: [CategoryController],
   providers: [CategoryService],
-  exports:[CategoryService]
+  exports: [CategoryService],
 })
 export class CategoryModule {}

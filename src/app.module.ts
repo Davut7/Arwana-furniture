@@ -18,13 +18,15 @@ import { BrandsModule } from './brands/brands.module';
 import { ProductsModule } from './products/products.module';
 import { BrandCategoryModule } from './brand-category/brand-category.module';
 import { SharedModule } from './shared/shared.module';
+import { MediaModule } from './media/media.module';
+import { ProductOptionsModule } from './product-options/product-options.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: `.${process.env.NODE_ENV}.env` }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
+      host: process.env.DB_HOST,
       port: +process.env.DB_PORT,
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
@@ -48,6 +50,8 @@ import { SharedModule } from './shared/shared.module';
     ProductsModule,
     BrandCategoryModule,
     SharedModule,
+    MediaModule,
+    ProductOptionsModule,
   ],
   providers: [
     {

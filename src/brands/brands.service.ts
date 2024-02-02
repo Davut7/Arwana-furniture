@@ -1,4 +1,3 @@
-import { extractFileName } from 'src/helpers/common/extractFromFileName';
 import {
   BadRequestException,
   Inject,
@@ -57,6 +56,12 @@ export class BrandsService {
     const [brands, count] = await this.brandRepository
       .createQueryBuilder('brands')
       .leftJoinAndSelect('brands.medias', 'medias')
+      .leftJoinAndSelect('brands.brandCategories', 'brandCategories')
+      .leftJoinAndSelect('brandCategories.category', 'category')
+      .leftJoinAndSelect('brandCategories.products', 'products')
+      .leftJoinAndSelect('products.medias', 'productMedias')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
       .getManyAndCount();
 
     return {
@@ -73,6 +78,9 @@ export class BrandsService {
       .leftJoinAndSelect('brands.brandCategories', 'brandCategories')
       .leftJoinAndSelect('brandCategories.category', 'category')
       .leftJoinAndSelect('brandCategories.products', 'products')
+      .leftJoinAndSelect('products.medias', 'productMedias')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
       .where('brands.id = :brandId', { brandId })
       .getOne();
     if (!brand) throw new NotFoundException('Brand not found!');
@@ -96,9 +104,7 @@ export class BrandsService {
   async deleteBrand(brandId: string) {
     const brand = await this.findOneBrand(brandId);
 
-    let fileNamesToDelete = brand.medias.map((media) =>
-      extractFileName(media.fileName),
-    );
+    const fileNamesToDelete = brand.medias.map((media) => media.fileName);
 
     await this.minioService.deleteFiles(fileNamesToDelete);
 
@@ -136,11 +142,9 @@ export class BrandsService {
     if (!image)
       throw new NotFoundException(`Image with id ${imageId} not found!`);
 
-    const fileName = extractFileName(image.fileName);
+    await this.minioService.deleteFile(image.fileName);
 
-    await this.minioService.deleteFile(fileName);
-
-    await this.mediaRepository.delete(image);
+    await this.mediaRepository.delete(image.id);
 
     return {
       message: 'Brand image deleted successfully!',
@@ -172,9 +176,7 @@ export class BrandsService {
     if (!video)
       throw new NotFoundException(`Video with id ${videoId} not found!`);
 
-    const fileName = extractFileName(video.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(video.fileName);
 
     await this.mediaRepository.delete(video);
 
@@ -225,9 +227,7 @@ export class BrandsService {
 
     await this.mediaRepository.delete(catalogId);
 
-    const fileName = extractFileName(catalog.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(catalog.fileName);
 
     return {
       message: `Catalog with id ${catalogId} deleted successfully`,

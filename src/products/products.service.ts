@@ -1,4 +1,3 @@
-import { extractFileName } from 'src/helpers/common/extractFromFileName';
 import {
   ConflictException,
   Injectable,
@@ -50,20 +49,12 @@ export class ProductsService {
   async findAllProducts() {
     const [products, count] = await this.productRepository
       .createQueryBuilder('products')
-      .leftJoin('products.medias', 'medias')
-      .select([
-        'products.id',
-        'products.tkmTitle',
-        'products.ruTitle',
-        'products.enTitle',
-        'products.tkmDescription',
-        'products.ruDescription',
-        'products.enDescription',
-        'medias.id',
-        'medias.fileName',
-        'medias.filePath',
-        'medias.fileType',
-      ])
+      .leftJoinAndSelect('products.medias', 'medias')
+      .leftJoinAndSelect('products.categoryBrand', 'categoryBrand')
+      .leftJoinAndSelect('categoryBrand.category', 'category')
+      .leftJoinAndSelect('categoryBrand.brand', 'brand')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
       .getManyAndCount();
 
     return {
@@ -74,9 +65,16 @@ export class ProductsService {
   }
 
   async findOneProduct(productId: string) {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
+    const product = await this.productRepository
+      .createQueryBuilder('products')
+      .leftJoinAndSelect('products.medias', 'medias')
+      .leftJoinAndSelect('products.categoryBrand', 'categoryBrand')
+      .leftJoinAndSelect('categoryBrand.category', 'category')
+      .leftJoinAndSelect('categoryBrand.brand', 'brand')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
+      .where('products.id = :productId', { productId })
+      .getOne();
     if (!product)
       throw new NotFoundException(`Product with id ${productId} not found!`);
     return product;
@@ -97,9 +95,7 @@ export class ProductsService {
   async deleteProduct(productId: string) {
     const product = await this.findOneProduct(productId);
 
-    const fileNames = product.medias.map((media) => {
-      return extractFileName(media.fileName);
-    });
+    const fileNames = product.medias.map((media) => media.fileName);
 
     await this.productRepository.delete(product.id);
 
@@ -129,14 +125,12 @@ export class ProductsService {
   }
 
   async deleteImage(productId: string, fileId: string) {
-    const candidate = await this.mediaRepository.findOne({
+    const image = await this.mediaRepository.findOne({
       where: { id: fileId, product: { id: productId } },
     });
-    if (!candidate) throw new NotFoundException('Image not found!');
+    if (!image) throw new NotFoundException('Image not found!');
 
-    const fileName = extractFileName(candidate.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(image.fileName);
 
     await this.mediaRepository.delete(fileId);
 
@@ -163,15 +157,13 @@ export class ProductsService {
   }
 
   async deleteVideo(productId: string, fileId: string) {
-    const candidate = await this.mediaRepository.findOne({
+    const image = await this.mediaRepository.findOne({
       where: { id: fileId, product: { id: productId } },
     });
 
-    if (!candidate) throw new NotFoundException('Product not found!');
+    if (!image) throw new NotFoundException('Product not found!');
 
-    const fileName = extractFileName(candidate.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(image.fileName);
 
     await this.mediaRepository.delete(fileId);
 

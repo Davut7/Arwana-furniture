@@ -15,5 +15,6 @@ import { BrandCategoryModule } from 'src/brand-category/brand-category.module';
   ],
   controllers: [ProductsController],
   providers: [ProductsService],
+  exports: [ProductsService],
 })
 export class ProductsModule {}

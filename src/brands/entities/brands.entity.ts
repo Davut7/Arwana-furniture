@@ -1,6 +1,6 @@
 import { MinLength } from 'class-validator';
 import { MediaEntity } from 'src/helpers/entities/media.entity';
-import { BaseEntity } from 'src/helpers/baseEntity.entity';
+import { BaseEntity } from 'src/helpers/entities/baseEntity.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { CategoryBrandEntity } from 'src/brand-category/entities/brandCategory.entity';
 

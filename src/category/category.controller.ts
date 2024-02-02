@@ -15,7 +15,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/createCategory.dto';
 import { UpdateCategoryDto } from './dto/updateCategory.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage, memoryStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { imageFilter } from 'src/helpers/filters/imageFilter';
 import { videoFilter } from 'src/helpers/filters/videoFilter';
 import {
@@ -146,9 +146,7 @@ export class CategoryController {
   @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('video', {
-      storage: diskStorage({
-        destination: './uploads/videos',
-      }),
+      storage: memoryStorage(),
       fileFilter: videoFilter,
       limits: {
         fileSize: 200 * 1024 * 1024,

@@ -21,7 +21,7 @@ export class ImageSharpFileConverter
       .toFormat('webp')
       .toBuffer();
 
-    await this.minioService.uploadImageFile(
+    await this.minioService.uploadObject(
       imageName,
       transformedBuffer,
       transformedBuffer.buffer.byteLength,
@@ -29,7 +29,7 @@ export class ImageSharpFileConverter
     const imagePath = await this.minioService.getFileUrl(imageName);
     const fileType = FileTypeEnum.image;
     return {
-      fileName: process.env.MINIO_HOST + imageName,
+      fileName: imageName,
       filePath: imagePath,
       fileType,
     };

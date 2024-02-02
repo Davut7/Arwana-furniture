@@ -40,7 +40,7 @@ export class MinioService {
     }
   }
 
-  async uploadImageFile(fileName: string, buffer: Buffer, size: number) {
+  async uploadObject(fileName: string, buffer: Buffer, size: number) {
     const file = await this.minioClient.putObject(
       this.bucketName,
       fileName,
@@ -69,7 +69,7 @@ export class MinioService {
       fileName,
     );
     return url.replace(
-      this.configService.get('MINIO_HOST'),
+      'http://localhost:9000/' + this.bucketName + '/',
       process.env.MINIO_HOST,
     );
   }

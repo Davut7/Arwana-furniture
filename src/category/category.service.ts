@@ -14,7 +14,6 @@ import { MediaEntity } from 'src/helpers/entities/media.entity';
 import { ImageSharpFileConverter } from 'src/helpers/pipes/imageTransform.pipe';
 import { VideoFileConverter } from 'src/helpers/pipes/videoTransform.pipe';
 import { MinioService } from 'src/minio/minio.service';
-import { extractFileName } from 'src/helpers/common/extractFromFileName';
 import { BrandsService } from 'src/brands/brands.service';
 import { CategoryBrandEntity } from 'src/brand-category/entities/brandCategory.entity';
 
@@ -51,17 +50,13 @@ export class CategoryService {
   async findCategories() {
     const [categories, count] = await this.categoryRepository
       .createQueryBuilder('category')
-      .leftJoin('category.medias', 'categoryMedia')
-      .select([
-        'category.id',
-        'category.ruTitle',
-        'category.enTitle',
-        'category.tkmTitle',
-        'categoryMedia.id',
-        'categoryMedia.fileName',
-        'categoryMedia.filePath',
-        'categoryMedia.fileType',
-      ])
+      .leftJoinAndSelect('category.medias', 'categoryMedia')
+      .leftJoinAndSelect('category.categoryBrands', 'categoryBrands')
+      .leftJoinAndSelect('categoryBrands.brand', 'brand')
+      .leftJoinAndSelect('categoryBrands.products', 'products')
+      .leftJoinAndSelect('products.medias', 'medias')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
       .getManyAndCount();
     return {
       messages: 'Categories returned successfully!',
@@ -76,6 +71,10 @@ export class CategoryService {
       .leftJoinAndSelect('category.medias', 'categoryMedia')
       .leftJoinAndSelect('category.categoryBrands', 'categoryBrands')
       .leftJoinAndSelect('categoryBrands.brand', 'brand')
+      .leftJoinAndSelect('categoryBrands.products', 'products')
+      .leftJoinAndSelect('products.medias', 'productMedia')
+      .leftJoinAndSelect('products.productOptions', 'productOptions')
+      .leftJoinAndSelect('productOptions.medias', 'productOptionsMedias')
       .where('category.id = :categoryId', { categoryId })
       .getOne();
 
@@ -89,9 +88,7 @@ export class CategoryService {
     const category = await this.findOneCategory(categoryId);
     if (!category) throw new NotFoundException('Category not found!');
 
-    let fileNamesToDelete = category.medias.map((media) =>
-      extractFileName(media.fileName),
-    );
+    const fileNamesToDelete = category.medias.map((media) => media.fileName);
 
     const categoryBrands = await this.categoryBrandRepository.find({
       where: { category: category },
@@ -156,14 +153,12 @@ export class CategoryService {
   }
 
   async deleteImage(categoryId: string, fileId: string) {
-    const candidate = await this.mediaRepository.findOne({
+    const image = await this.mediaRepository.findOne({
       where: { id: fileId, category: { id: categoryId } },
     });
-    if (!candidate) throw new NotFoundException('Image not found!');
+    if (!image) throw new NotFoundException('Image not found!');
 
-    const fileName = extractFileName(candidate.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(image.fileName);
 
     await this.mediaRepository.delete(fileId);
 
@@ -190,15 +185,13 @@ export class CategoryService {
   }
 
   async deleteVideo(categoryId: string, fileId: string) {
-    const candidate = await this.mediaRepository.findOne({
+    const image = await this.mediaRepository.findOne({
       where: { id: fileId, category: { id: categoryId } },
     });
 
-    if (!candidate) throw new NotFoundException('Video not found!');
+    if (!image) throw new NotFoundException('Video not found!');
 
-    const fileName = extractFileName(candidate.fileName);
-
-    await this.minioService.deleteFile(fileName);
+    await this.minioService.deleteFile(image.fileName);
 
     await this.mediaRepository.delete(fileId);
 

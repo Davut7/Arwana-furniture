@@ -39,7 +39,7 @@ async function bootstrap() {
   app.use(helmet());
   app.enableCors({
     credentials: true,
-    origin: '*',
+    origin: 'http://182.237.3.11',
   });
   app.use(cookieParser(`${process.env.COOKIE_SECRET}`));
   app.use(compression());

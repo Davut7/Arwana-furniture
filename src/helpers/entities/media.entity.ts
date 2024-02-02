@@ -1,6 +1,7 @@
 import { BrandsEntity } from 'src/brands/entities/brands.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
-import { BaseEntity } from 'src/helpers/baseEntity.entity';
+import { BaseEntity } from 'src/helpers/entities/baseEntity.entity';
+import { ProductOptionsEntity } from 'src/product-options/entities/productOptions.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
@@ -22,7 +23,7 @@ export class MediaEntity extends BaseEntity {
   fileType: FileTypeEnum;
 
   @ManyToOne(() => CategoryEntity, (category) => category.medias, {
-    onDelete:'CASCADE'
+    onDelete: 'CASCADE',
   })
   category: CategoryEntity;
 
@@ -35,4 +36,11 @@ export class MediaEntity extends BaseEntity {
     onDelete: 'CASCADE',
   })
   product: ProductEntity;
+
+  @ManyToOne(
+    () => ProductOptionsEntity,
+    (productOption) => productOption.medias,
+    { onDelete: 'CASCADE' },
+  )
+  productOption: ProductOptionsEntity;
 }

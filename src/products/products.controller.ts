@@ -16,10 +16,10 @@ import { CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProducts.dto';
 import { AuthGuard } from 'src/admin/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage, memoryStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { imageFilter } from 'src/helpers/filters/imageFilter';
 import { videoFilter } from 'src/helpers/filters/videoFilter';
-import { randomUUID } from 'crypto';
+
 import {
   ApiBearerAuth,
   ApiBody,
@@ -145,20 +145,7 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('video', {
-      storage: diskStorage({
-        destination: './uploads/videos',
-        filename: (req, file, callback) => {
-          const originalNameWithoutExtension = file.originalname
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          const random = randomUUID();
-          const uniqueFilename = `${originalNameWithoutExtension}-${random}${file.originalname.slice(
-            -4,
-          )}`;
-          callback(null, uniqueFilename);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: videoFilter,
       limits: {
         fieldSize: 200 * 1024 * 1024,

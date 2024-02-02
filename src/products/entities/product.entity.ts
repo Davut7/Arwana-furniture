@@ -1,7 +1,8 @@
-import { MinLength } from 'class-validator';
+import { IsOptional, MinLength } from 'class-validator';
 import { CategoryBrandEntity } from 'src/brand-category/entities/brandCategory.entity';
-import { BaseEntity } from 'src/helpers/baseEntity.entity';
+import { BaseEntity } from 'src/helpers/entities/baseEntity.entity';
 import { MediaEntity } from 'src/helpers/entities/media.entity';
+import { ProductOptionsEntity } from 'src/product-options/entities/productOptions.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity({ name: 'products' })
@@ -30,6 +31,11 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: false })
   ruDescription: string;
 
+  @IsOptional()
+  @MinLength(1, { message: 'Price not provided' })
+  @Column({ type: 'varchar', nullable: true })
+  price: string;
+
   @ManyToOne(
     () => CategoryBrandEntity,
     (categoryBrand) => categoryBrand.products,
@@ -40,4 +46,7 @@ export class ProductEntity extends BaseEntity {
 
   @OneToMany(() => MediaEntity, (media) => media.product)
   medias: MediaEntity[];
+
+  @OneToMany(() => ProductOptionsEntity, (productOption) => productOption.product)
+  productOptions: ProductOptionsEntity[];
 }

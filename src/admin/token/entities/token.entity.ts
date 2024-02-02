@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { UserEntity } from '../../user/entities/user.entity';
-import { BaseEntity } from '../../../helpers/baseEntity.entity';
+import { BaseEntity } from '../../../helpers/entities/baseEntity.entity';
 
 @Entity({ name: 'tokens' })
 export class TokenEntity extends BaseEntity {

@@ -16,13 +16,12 @@ import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/crateBrands.dto';
 import { UpdateBrandsDto } from './dto/updateBrands.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage, memoryStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { imageFilter } from 'src/helpers/filters/imageFilter';
 import { videoFilter } from 'src/helpers/filters/videoFilter';
 import { AuthGuard } from 'src/admin/guards/auth.guard';
 import { catalogFilter } from 'src/helpers/filters/catalogFilter';
 import { Response } from 'express';
-import { randomUUID } from 'crypto';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -135,9 +134,7 @@ export class BrandsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('video', {
-      storage: diskStorage({
-        destination: './uploads/videos',
-      }),
+      storage: memoryStorage(),
       fileFilter: videoFilter,
       limits: { fileSize: 200 * 1024 * 1024 },
     }),
@@ -173,20 +170,7 @@ export class BrandsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('catalog', {
-      storage: diskStorage({
-        destination: './uploads/catalogs',
-        filename: (req, file, callback) => {
-          const originalNameWithoutExtension = file.originalname
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          const random = randomUUID();
-          const uniqueFilename = `${originalNameWithoutExtension}-${random}${file.originalname.slice(
-            -4,
-          )}`;
-          callback(null, uniqueFilename);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: catalogFilter,
       limits: { fileSize: 200 * 1024 * 1024 },
     }),
@@ -199,15 +183,15 @@ export class BrandsController {
   }
 
   @ApiParam({ name: 'brandId', description: 'Brand ID' })
-  @ApiParam({ name: 'imageId', description: 'Image ID' })
+  @ApiParam({ name: 'catalogId', description: 'Catalog ID' })
   @ApiBearerAuth()
-  @Delete('/:brandId/catalog/:videoId')
+  @Delete('/:brandId/catalog/:catalogId')
   @UseGuards(AuthGuard)
   deleteCatalog(
     @Param('brandId', ParseUUIDPipe) brandId: string,
-    @Param('catalog', ParseUUIDPipe) catalog: string,
+    @Param('catalogId', ParseUUIDPipe) catalogId: string,
   ) {
-    return this.brandsService.deleteCatalog(brandId, catalog);
+    return this.brandsService.deleteCatalog(brandId, catalogId);
   }
 
   @ApiParam({ name: 'brandId', description: 'Brand ID' })
